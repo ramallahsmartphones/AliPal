@@ -606,6 +606,10 @@
           <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span>طلباتي</span><span class="chev">‹</span>
         </div>
+        <div class="menu-row" onclick="openAdmin()">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          <span>لوحة التحكم — إضافة منتج (تجريبي)</span><span class="chev">‹</span>
+        </div>
         <div class="menu-row">
           <svg viewBox="0 0 24 24" fill="none"><path d="M20.8 12.1c0-.4.2-.7.5-1a8.4 8.4 0 0 0-1-2.5 1.4 1.4 0 0 1-1.6-.2 1.4 1.4 0 0 1-.2-1.6 8.4 8.4 0 0 0-2.5-1 1.4 1.4 0 0 1-2.6 0 8.4 8.4 0 0 0-2.5 1 1.4 1.4 0 0 1-1.8 1.8 8.4 8.4 0 0 0-1 2.5c.3.3.5.6.5 1s-.2.7-.5 1a8.4 8.4 0 0 0 1 2.5 1.4 1.4 0 0 1 1.8 1.8 8.4 8.4 0 0 0 2.5 1 1.4 1.4 0 0 1 2.6 0 8.4 8.4 0 0 0 2.5-1 1.4 1.4 0 0 1 1.8-1.8 8.4 8.4 0 0 0 1-2.5c-.3-.3-.5-.6-.5-1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.5"/></svg>
           <span>العناوين المحفوظة</span><span class="chev">‹</span>
@@ -640,6 +644,54 @@
     <section class="view" data-view="track">
       <div id="track-order-card"></div>
       <div class="timeline" id="track-timeline"></div>
+    </section>
+
+    <!-- ===================== ADMIN: PRODUCT LIST (trial, this device only) ===================== -->
+    <section class="view" data-view="admin">
+      <div style="padding:14px 16px 0;">
+        <div style="background:var(--accent-tint); border:1px solid var(--accent); border-radius:var(--radius-m); padding:11px 13px; font-size:11.8px; color:var(--accent-dark); line-height:1.7; margin-bottom:4px;">
+          ⚠️ وضع تجريبي: المنتجات التي تضيفها هنا تُحفظ على هذا الجهاز فقط ولن تظهر للزبائن على أجهزتهم.
+        </div>
+      </div>
+      <div style="padding:14px 16px 6px;">
+        <button class="primary-btn" style="width:100%;" onclick="showAddProductForm()">+ أضف منتج جديد</button>
+      </div>
+      <div id="admin-product-list" style="padding-top:6px;"></div>
+    </section>
+
+    <!-- ===================== ADMIN: ADD PRODUCT FORM ===================== -->
+    <section class="view" data-view="admin-form">
+      <div class="form-group" style="padding-top:16px;">
+        <label for="af-name">اسم المنتج</label>
+        <input id="af-name" placeholder="مثال: سماعة بلوتوث رياضية">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="af-cat">الفئة</label>
+          <select id="af-cat"></select>
+        </div>
+        <div class="form-group">
+          <label for="af-icon">الأيقونة</label>
+          <select id="af-icon"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="af-price">السعر (₪)</label>
+          <input id="af-price" type="number" inputmode="decimal" placeholder="مثال: 99">
+        </div>
+        <div class="form-group">
+          <label for="af-oldprice">سعر قديم — اختياري</label>
+          <input id="af-oldprice" type="number" inputmode="decimal" placeholder="مثال: 130">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="af-desc">وصف قصير</label>
+        <input id="af-desc" placeholder="جملة أو جملتين عن المنتج">
+      </div>
+      <div style="padding:4px 16px 20px;">
+        <button class="primary-btn" style="width:100%;" onclick="saveNewProduct()">حفظ المنتج</button>
+      </div>
     </section>
 
   </main>
@@ -788,6 +840,7 @@ let activeCategory = 'all';
 let navStack = ['home'];
 let selectedPay = 'cod';
 let trackingOrderId = null;
+let customProducts = [];    // products added from the on-device Admin panel (saved to localStorage)
 
 const SHIPPING_FEE = 15;
 const FREE_SHIP_THRESHOLD = 300;
@@ -800,7 +853,8 @@ function findProduct(id){ return PRODUCTS.find(p => p.id === id); }
    ============================================================ */
 const VIEW_TITLES = {
   search:'الفئات والبحث', product:'تفاصيل المنتج', cart:'سلة التسوق',
-  checkout:'إتمام الشراء', confirm:'تأكيد الطلب', orders:'طلباتي', track:'تتبّع الطلب', account:'حسابي'
+  checkout:'إتمام الشراء', confirm:'تأكيد الطلب', orders:'طلباتي', track:'تتبّع الطلب', account:'حسابي',
+  admin:'لوحة التحكم', 'admin-form':'منتج جديد'
 };
 
 function go(view, opts){
@@ -821,7 +875,7 @@ function go(view, opts){
   // bottom nav highlight
   const tabMap = {home:'home', search:'search', cart:'cart', orders:'orders', account:'account'};
   document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabMap[view]));
-  document.getElementById('bottomnav').style.display = ['product','checkout','confirm','track'].includes(view) ? 'none' : 'flex';
+  document.getElementById('bottomnav').style.display = ['product','checkout','confirm','track','admin-form'].includes(view) ? 'none' : 'flex';
 
   // action bars
   document.getElementById('pd-actions').style.display = (view === 'product') ? 'flex' : 'none';
@@ -833,6 +887,7 @@ function go(view, opts){
   if(view === 'checkout') renderCheckout();
   if(view === 'orders') renderOrders();
   if(view === 'track') renderTrack();
+  if(view === 'admin') renderAdminList();
 }
 
 function handleBack(){
@@ -1222,6 +1277,108 @@ function renderTrack(){
 }
 
 /* ============================================================
+   ADMIN PANEL (trial): add products from this device only.
+   Saved to localStorage — NOT a shared/live database. Products
+   added here are visible only in the browser that added them.
+   ============================================================ */
+const ICON_LABELS = {
+  phone:'هاتف / إلكترونيات', headphones:'سماعات', laptop:'لابتوب', speaker:'مكبر صوت',
+  watch:'ساعة', shirt:'قميص', dress:'فستان', shoe:'حذاء',
+  home:'منزل', lamp:'إضاءة', pot:'مطبخ',
+  drop:'عناية وتجميل', lips:'مكياج',
+  bag:'حقيبة / إكسسوار', gift:'هدية / لعبة', toy:'لعبة',
+  dumbbell:'رياضة', ball:'رياضة (كرة)', basket:'سوبر ماركت'
+};
+
+function loadCustomProducts(){
+  try{
+    const raw = localStorage.getItem('alipal_custom_products');
+    customProducts = raw ? JSON.parse(raw) : [];
+  }catch(e){ customProducts = []; }
+  customProducts.forEach(p => PRODUCTS.push(p));
+}
+function persistCustomProducts(){
+  try{ localStorage.setItem('alipal_custom_products', JSON.stringify(customProducts)); }catch(e){}
+}
+
+function openAdmin(){ go('admin'); }
+
+function renderAdminList(){
+  const wrap = document.getElementById('admin-product-list');
+  if(PRODUCTS.length === 0){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = PRODUCTS.map(p => {
+    const isCustom = !!p.custom;
+    return `<div class="order-card" style="display:flex; align-items:center; gap:12px; margin:0 16px 10px;">
+      <div class="cart-thumb" style="background:${bgForCat(p.cat)}; flex:0 0 52px; width:52px; height:52px;">
+        <div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div>
+      </div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:12.8px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</div>
+        <div style="font-size:11.5px; color:var(--ink-faint); margin-top:2px;">${fmt(p.price)} ${isCustom ? '· أضفته أنت' : '· منتج افتراضي'}</div>
+      </div>
+      ${isCustom ? `<button class="remove-btn" style="flex:0 0 auto;" onclick="deleteCustomProduct('${p.id}')">حذف</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function populateAdminFormSelects(){
+  document.getElementById('af-cat').innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('af-icon').innerHTML = Object.entries(ICON_LABELS).map(([key,label]) => `<option value="${key}">${label}</option>`).join('');
+}
+
+function showAddProductForm(){
+  populateAdminFormSelects();
+  document.getElementById('af-name').value = '';
+  document.getElementById('af-price').value = '';
+  document.getElementById('af-oldprice').value = '';
+  document.getElementById('af-desc').value = '';
+  document.getElementById('af-cat').value = activeCategory !== 'all' && activeCategory !== 'deals' ? activeCategory : 'electronics';
+  go('admin-form');
+}
+
+function saveNewProduct(){
+  const name = document.getElementById('af-name').value.trim();
+  const cat = document.getElementById('af-cat').value;
+  const icon = document.getElementById('af-icon').value;
+  const price = parseFloat(document.getElementById('af-price').value);
+  const oldPriceRaw = document.getElementById('af-oldprice').value;
+  const oldPrice = oldPriceRaw ? parseFloat(oldPriceRaw) : null;
+  const desc = document.getElementById('af-desc').value.trim() || 'منتج جديد من AliPal.';
+
+  if(!name || !price || price <= 0){
+    showToast('يرجى إدخال اسم المنتج والسعر');
+    return;
+  }
+  if(oldPrice && oldPrice <= price){
+    showToast('السعر القديم يجب أن يكون أعلى من السعر الحالي');
+    return;
+  }
+
+  const product = {
+    id: 'c' + Date.now(),
+    cat, icon, name, price, oldPrice: oldPrice || null,
+    rating: 5.0, sold: 'جديد', desc, opts: null, fav: false, custom: true
+  };
+  PRODUCTS.push(product);
+  customProducts.push(product);
+  persistCustomProducts();
+  showToast('تمت إضافة المنتج بنجاح');
+  renderHome();
+  navStack = ['home','account','admin'];
+  go('admin');
+}
+
+function deleteCustomProduct(id){
+  customProducts = customProducts.filter(p => p.id !== id);
+  const idx = PRODUCTS.findIndex(p => p.id === id);
+  if(idx > -1) PRODUCTS.splice(idx, 1);
+  persistCustomProducts();
+  renderAdminList();
+  renderHome();
+  showToast('تم حذف المنتج');
+}
+
+/* ============================================================
    TOAST
    ============================================================ */
 let toastTimer;
@@ -1272,6 +1429,7 @@ function sessionStorageSafeSet(key, val){ try{ sessionStorage.setItem(key, val);
 /* ============================================================
    INIT
    ============================================================ */
+loadCustomProducts();
 renderHome();
 updateCartBadges();
 go('home');
