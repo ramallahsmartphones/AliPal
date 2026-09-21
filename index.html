@@ -646,12 +646,32 @@
       <div class="timeline" id="track-timeline"></div>
     </section>
 
-    <!-- ===================== ADMIN: PRODUCT LIST (trial, this device only) ===================== -->
-    <section class="view" data-view="admin">
-      <div style="padding:14px 16px 0;">
-        <div style="background:var(--accent-tint); border:1px solid var(--accent); border-radius:var(--radius-m); padding:11px 13px; font-size:11.8px; color:var(--accent-dark); line-height:1.7; margin-bottom:4px;">
-          ⚠️ وضع تجريبي: المنتجات التي تضيفها هنا تُحفظ على هذا الجهاز فقط ولن تظهر للزبائن على أجهزتهم.
+    <!-- ===================== ADMIN: LOGIN ===================== -->
+    <section class="view" data-view="admin-login">
+      <div style="padding:40px 24px 10px; text-align:center;">
+        <div style="width:56px;height:56px;border-radius:16px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+          <svg viewBox="0 0 24 24" fill="none" width="26" height="26"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg>
         </div>
+        <h2 style="margin:0 0 6px; font-size:17px; font-weight:800;">دخول صاحب المتجر</h2>
+        <p style="margin:0; font-size:12.5px; color:var(--ink-soft);">سجّل دخولك لإدارة منتجات AliPal</p>
+      </div>
+      <div class="form-group" style="padding-top:10px;">
+        <label for="admin-email">البريد الإلكتروني</label>
+        <input id="admin-email" type="email" placeholder="you@example.com" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="admin-password">كلمة المرور</label>
+        <input id="admin-password" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div style="padding:4px 16px 20px;">
+        <button class="primary-btn" style="width:100%;" onclick="adminSignIn()">دخول</button>
+      </div>
+    </section>
+
+    <!-- ===================== ADMIN: PRODUCT LIST (shared — synced via Firestore) ===================== -->
+    <section class="view" data-view="admin">
+      <div style="padding:14px 16px 0; display:flex; justify-content:flex-end;">
+        <button class="ghost-btn" style="padding:6px 14px; font-size:12px;" onclick="adminSignOut()">تسجيل الخروج</button>
       </div>
       <div style="padding:14px 16px 6px;">
         <button class="primary-btn" style="width:100%;" onclick="showAddProductForm()">+ أضف منتج جديد</button>
@@ -688,6 +708,11 @@
       <div class="form-group">
         <label for="af-desc">وصف قصير</label>
         <input id="af-desc" placeholder="جملة أو جملتين عن المنتج">
+      </div>
+      <div class="form-group">
+        <label for="af-photo">صورة المنتج — اختياري</label>
+        <input id="af-photo" type="file" accept="image/*" onchange="handlePhotoSelect(this)" style="padding:9px 12px;">
+        <img id="af-photo-preview" style="display:none; margin-top:10px; width:100%; max-height:200px; object-fit:cover; border-radius:var(--radius-s); border:1px solid var(--border);">
       </div>
       <div style="padding:4px 16px 20px;">
         <button class="primary-btn" style="width:100%;" onclick="saveNewProduct()">حفظ المنتج</button>
@@ -746,6 +771,9 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script>
 /* ============================================================
    ICONS — small line-icon set reused across categories/products
@@ -798,7 +826,7 @@ let uid = 1;
 function P(cat, icon, name, price, oldPrice, rating, sold, desc, opts){
   return {id:'p'+(uid++), cat, icon, name, price, oldPrice:oldPrice||null, rating, sold, desc, opts:opts||null, fav:false};
 }
-const PRODUCTS = [
+const STATIC_PRODUCTS = [
   P('electronics','phone','سماعة بلوتوث لاسلكية بعزل ضوضاء',129,189,4.6,'2.3k','سماعة رأس لاسلكية بتقنية عزل الضوضاء النشط، بطارية تدوم حتى ٣٠ ساعة، ومقاومة للعرق مثالية للرياضة والسفر.',{color:['أسود','أبيض','أزرق']}),
   P('electronics','watch','ساعة ذكية متعددة الرياضات',219,299,4.5,'1.8k','ساعة ذكية بشاشة AMOLED، تتبع معدل ضربات القلب والنوم، مقاومة للماء، وتنبيهات المكالمات والرسائل.',{color:['أسود','فضي','ذهبي']}),
   P('electronics','laptop','حامل لابتوب ألمنيوم قابل للطي',65,null,4.7,'940','حامل مريح وخفيف الوزن، يرفع الشاشة لمستوى النظر لتقليل إجهاد الرقبة، متوافق مع جميع المقاسات.',null),
@@ -828,6 +856,14 @@ const PRODUCTS = [
   P('grocery','basket','زيت زيتون بكر ممتاز فلسطيني ١لتر',48,60,4.9,'890','زيت زيتون بكر ممتاز معصور على البارد من أشجار زيتون فلسطينية عريقة.',null),
 ];
 
+// PRODUCTS is what every screen renders from: the built-in demo catalog
+// plus whatever is currently synced down from Firestore.
+let PRODUCTS = [];
+function rebuildProducts(){
+  PRODUCTS.length = 0;
+  PRODUCTS.push(...STATIC_PRODUCTS, ...firestoreProducts);
+}
+
 /* ============================================================
    STATE (in-memory only — resets on reload)
    ============================================================ */
@@ -840,7 +876,6 @@ let activeCategory = 'all';
 let navStack = ['home'];
 let selectedPay = 'cod';
 let trackingOrderId = null;
-let customProducts = [];    // products added from the on-device Admin panel (saved to localStorage)
 
 const SHIPPING_FEE = 15;
 const FREE_SHIP_THRESHOLD = 300;
@@ -854,7 +889,7 @@ function findProduct(id){ return PRODUCTS.find(p => p.id === id); }
 const VIEW_TITLES = {
   search:'الفئات والبحث', product:'تفاصيل المنتج', cart:'سلة التسوق',
   checkout:'إتمام الشراء', confirm:'تأكيد الطلب', orders:'طلباتي', track:'تتبّع الطلب', account:'حسابي',
-  admin:'لوحة التحكم', 'admin-form':'منتج جديد'
+  admin:'لوحة التحكم', 'admin-form':'منتج جديد', 'admin-login':'دخول الإدارة'
 };
 
 function go(view, opts){
@@ -875,7 +910,7 @@ function go(view, opts){
   // bottom nav highlight
   const tabMap = {home:'home', search:'search', cart:'cart', orders:'orders', account:'account'};
   document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabMap[view]));
-  document.getElementById('bottomnav').style.display = ['product','checkout','confirm','track','admin-form'].includes(view) ? 'none' : 'flex';
+  document.getElementById('bottomnav').style.display = ['product','checkout','confirm','track','admin-form','admin-login'].includes(view) ? 'none' : 'flex';
 
   // action bars
   document.getElementById('pd-actions').style.display = (view === 'product') ? 'flex' : 'none';
@@ -914,11 +949,14 @@ function openDeals(){
    RENDER: HOME
    ============================================================ */
 function productThumbSVG(p, size){
+  const media = p.image
+    ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">`
+    : `<div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div>`;
   return `<div class="thumb" style="background:${bgForCat(p.cat)}">${p.oldPrice ? `<span class="sale-tag">خصم ${discountPct(p)}٪</span>` : ''}
     <button class="fav ${p.fav?'on':''}" onclick="event.stopPropagation(); toggleFav('${p.id}')" aria-label="مفضلة">
       <svg viewBox="0 0 24 24" fill="${p.fav?'currentColor':'none'}" width="14" height="14"><path d="M12 18.5s-7-4.2-7-9.3A3.7 3.7 0 0 1 12 6.7a3.7 3.7 0 0 1 7 2.5c0 5.1-7 9.3-7 9.3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
     </button>
-    <div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div>
+    ${media}
   </div>`;
 }
 function bgForCat(cat){
@@ -1040,7 +1078,7 @@ function renderProductDetail(){
   document.getElementById('pd-content').innerHTML = `
     <div class="pd-gallery" style="background:${bgForCat(p.cat)}">
       ${p.oldPrice ? `<span class="sale-tag">خصم ${discountPct(p)}٪</span>` : ''}
-      <div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div>
+      ${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">` : `<div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div>`}
     </div>
     <div class="pd-body">
       <div class="pd-cat">${CATEGORIES.find(c=>c.id===p.cat)?.name || ''}</div>
@@ -1145,7 +1183,7 @@ function renderCart(){
     const p = findProduct(c.productId);
     const variant = Object.values(c.options || {}).join(' · ');
     return `<div class="cart-item">
-      <div class="cart-thumb" style="background:${bgForCat(p.cat)}"><div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div></div>
+      <div class="cart-thumb" style="background:${bgForCat(p.cat)}; overflow:hidden;">${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div>`}</div>
       <div class="cart-info">
         <div class="name">${p.name}</div>
         ${variant ? `<div class="variant">${variant}</div>` : ''}
@@ -1277,10 +1315,27 @@ function renderTrack(){
 }
 
 /* ============================================================
-   ADMIN PANEL (trial): add products from this device only.
-   Saved to localStorage — NOT a shared/live database. Products
-   added here are visible only in the browser that added them.
+   ADMIN PANEL — shared products via Firebase Firestore.
+   Products added here sync to EVERY visitor's app in real time,
+   including any uploaded photo (stored as a compressed image
+   directly inside the product document — no paid Storage needed).
    ============================================================ */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBgZg3VkZ52j1vID2kYOuyeKKKSFQSAWvA",
+  authDomain: "alipal-44ee9.firebaseapp.com",
+  projectId: "alipal-44ee9",
+  storageBucket: "alipal-44ee9.firebasestorage.app",
+  messagingSenderId: "600327084465",
+  appId: "1:600327084465:web:1b0a53b58749763f634590"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let firestoreProducts = [];
+let firestoreReady = false;
+let pendingImageDataUrl = null;
+
 const ICON_LABELS = {
   phone:'هاتف / إلكترونيات', headphones:'سماعات', laptop:'لابتوب', speaker:'مكبر صوت',
   watch:'ساعة', shirt:'قميص', dress:'فستان', shoe:'حذاء',
@@ -1290,31 +1345,62 @@ const ICON_LABELS = {
   dumbbell:'رياضة', ball:'رياضة (كرة)', basket:'سوبر ماركت'
 };
 
-function loadCustomProducts(){
-  try{
-    const raw = localStorage.getItem('alipal_custom_products');
-    customProducts = raw ? JSON.parse(raw) : [];
-  }catch(e){ customProducts = []; }
-  customProducts.forEach(p => PRODUCTS.push(p));
-}
-function persistCustomProducts(){
-  try{ localStorage.setItem('alipal_custom_products', JSON.stringify(customProducts)); }catch(e){}
+// Live-syncs: fires immediately with current data, then again any time
+// any visitor (or you) adds/removes a product — everyone sees updates
+// without needing to refresh.
+function startProductSync(){
+  db.collection('products').onSnapshot((snapshot) => {
+    firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, custom: true, ...doc.data() }));
+    rebuildProducts();
+    firestoreReady = true;
+    renderHome();
+    const activeView = document.querySelector('.view.active');
+    if(activeView && activeView.dataset.view === 'search') renderSearch();
+    if(activeView && activeView.dataset.view === 'admin') renderAdminList();
+  }, (err) => {
+    console.error('Firestore sync error', err);
+    showToast('تعذّر الاتصال بقاعدة البيانات — تحقق من الإنترنت');
+  });
 }
 
-function openAdmin(){ go('admin'); }
+function openAdmin(){
+  if(firebase.auth().currentUser){ go('admin'); }
+  else { go('admin-login'); }
+}
+
+function adminSignIn(){
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value;
+  if(!email || !password){ showToast('أدخل البريد وكلمة المرور'); return; }
+  showToast('جارِ الدخول…');
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then(() => { go('admin'); })
+    .catch((err) => {
+      console.error(err);
+      showToast('بيانات الدخول غير صحيحة');
+    });
+}
+
+function adminSignOut(){
+  firebase.auth().signOut().then(() => { go('account'); });
+}
 
 function renderAdminList(){
   const wrap = document.getElementById('admin-product-list');
+  if(!firestoreReady){ wrap.innerHTML = '<div style="padding:30px 16px; text-align:center; color:var(--ink-faint); font-size:12.5px;">جاري تحميل المنتجات…</div>'; return; }
   if(PRODUCTS.length === 0){ wrap.innerHTML = ''; return; }
   wrap.innerHTML = PRODUCTS.map(p => {
     const isCustom = !!p.custom;
+    const thumb = p.image
+      ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+      : `<div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div>`;
     return `<div class="order-card" style="display:flex; align-items:center; gap:12px; margin:0 16px 10px;">
-      <div class="cart-thumb" style="background:${bgForCat(p.cat)}; flex:0 0 52px; width:52px; height:52px;">
-        <div style="color:${colorForCat(p.cat)}">${ICONS[p.icon]}</div>
+      <div class="cart-thumb" style="background:${bgForCat(p.cat)}; flex:0 0 52px; width:52px; height:52px; overflow:hidden;">
+        ${thumb}
       </div>
       <div style="flex:1; min-width:0;">
         <div style="font-size:12.8px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</div>
-        <div style="font-size:11.5px; color:var(--ink-faint); margin-top:2px;">${fmt(p.price)} ${isCustom ? '· أضفته أنت' : '· منتج افتراضي'}</div>
+        <div style="font-size:11.5px; color:var(--ink-faint); margin-top:2px;">${fmt(p.price)} ${isCustom ? '· منتجك (يظهر للجميع)' : '· منتج افتراضي'}</div>
       </div>
       ${isCustom ? `<button class="remove-btn" style="flex:0 0 auto;" onclick="deleteCustomProduct('${p.id}')">حذف</button>` : ''}
     </div>`;
@@ -1333,7 +1419,36 @@ function showAddProductForm(){
   document.getElementById('af-oldprice').value = '';
   document.getElementById('af-desc').value = '';
   document.getElementById('af-cat').value = activeCategory !== 'all' && activeCategory !== 'deals' ? activeCategory : 'electronics';
+  document.getElementById('af-photo').value = '';
+  document.getElementById('af-photo-preview').style.display = 'none';
+  pendingImageDataUrl = null;
   go('admin-form');
+}
+
+// Resizes + compresses the chosen photo client-side (max 640px, JPEG ~60%)
+// so it fits comfortably inside a Firestore document (1MB limit) for free.
+function handlePhotoSelect(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxSide = 640;
+      let w = img.width, h = img.height;
+      if(w > h && w > maxSide){ h = Math.round(h * maxSide / w); w = maxSide; }
+      else if(h > maxSide){ w = Math.round(w * maxSide / h); h = maxSide; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      pendingImageDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+      const preview = document.getElementById('af-photo-preview');
+      preview.src = pendingImageDataUrl;
+      preview.style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function saveNewProduct(){
@@ -1355,28 +1470,34 @@ function saveNewProduct(){
   }
 
   const product = {
-    id: 'c' + Date.now(),
     cat, icon, name, price, oldPrice: oldPrice || null,
-    rating: 5.0, sold: 'جديد', desc, opts: null, fav: false, custom: true
+    rating: 5.0, sold: 'جديد', desc, opts: null, fav: false,
+    image: pendingImageDataUrl || null,
+    createdAt: Date.now()
   };
-  PRODUCTS.push(product);
-  customProducts.push(product);
-  persistCustomProducts();
-  showToast('تمت إضافة المنتج بنجاح');
-  renderHome();
-  navStack = ['home','account','admin'];
-  go('admin');
+
+  showToast('جارِ الحفظ…');
+  db.collection('products').add(product)
+    .then(() => {
+      showToast('تمت إضافة المنتج للجميع ✓');
+      navStack = ['home','account','admin'];
+      go('admin');
+    })
+    .catch((err) => {
+      console.error(err);
+      showToast('تعذّر الحفظ — تحقق من الإنترنت وحاول مجددًا');
+    });
 }
 
 function deleteCustomProduct(id){
-  customProducts = customProducts.filter(p => p.id !== id);
-  const idx = PRODUCTS.findIndex(p => p.id === id);
-  if(idx > -1) PRODUCTS.splice(idx, 1);
-  persistCustomProducts();
-  renderAdminList();
-  renderHome();
-  showToast('تم حذف المنتج');
+  db.collection('products').doc(id).delete()
+    .then(() => showToast('تم حذف المنتج'))
+    .catch((err) => { console.error(err); showToast('تعذّر الحذف'); });
 }
+
+// Wrapped so the app never breaks in browsing contexts where storage is blocked
+function sessionStorageSafeGet(key){ try{ return sessionStorage.getItem(key); }catch(e){ return null; } }
+function sessionStorageSafeSet(key, val){ try{ sessionStorage.setItem(key, val); }catch(e){} }
 
 /* ============================================================
    TOAST
@@ -1422,17 +1543,15 @@ function dismissInstallBanner(){
   if(banner) banner.style.display = 'none';
   sessionStorageSafeSet('alipal_install_dismissed', '1');
 }
-// Wrapped so the app never breaks in browsing contexts where storage is blocked
-function sessionStorageSafeGet(key){ try{ return sessionStorage.getItem(key); }catch(e){ return null; } }
-function sessionStorageSafeSet(key, val){ try{ sessionStorage.setItem(key, val); }catch(e){} }
 
 /* ============================================================
    INIT
    ============================================================ */
-loadCustomProducts();
+rebuildProducts();
 renderHome();
 updateCartBadges();
 go('home');
+startProductSync();
 </script>
 </body>
 </html>
