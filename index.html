@@ -208,6 +208,17 @@
   }
   .chip.on{background:var(--brand); border-color:var(--brand); color:#fff;}
 
+  .spec-filter-row{display:flex; gap:8px; flex-wrap:wrap; padding:2px 16px 10px; align-items:center;}
+  .spec-select{
+    flex:0 0 auto; padding:7px 10px; border-radius:999px; border:1px solid var(--border); background:var(--surface);
+    font-size:12px; font-weight:600; color:var(--ink-soft); font-family:inherit;
+  }
+  .spec-select.active{border-color:var(--brand); color:var(--brand);}
+  .price-range{display:flex; align-items:center; gap:6px; flex:0 0 auto;}
+  .price-range input{width:64px; padding:7px 8px; border-radius:999px; border:1px solid var(--border); background:var(--surface); font-size:12px; text-align:center; font-family:inherit;}
+  .price-range span{font-size:11px; color:var(--ink-faint);}
+  .spec-reset{flex:0 0 auto; font-size:11.5px; color:var(--brand); font-weight:700; background:none; border:none; padding:6px 4px;}
+
   /* ---------- Empty state ---------- */
   .empty{display:flex; flex-direction:column; align-items:center; text-align:center; padding:60px 30px 20px; gap:10px; color:var(--ink-soft);}
   .empty svg{width:64px; height:64px; color:var(--border); margin-bottom:6px;}
@@ -435,7 +446,7 @@
     </div>
     <div class="searchbar" id="sub-searchbar" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.6-3.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <input id="search-input" placeholder="ابحث عن منتج..." oninput="renderSearch()">
+      <input id="search-input" placeholder="ابحث عن منتج..." oninput="renderSearchGrid()">
     </div>
   </header>
 
@@ -456,9 +467,9 @@
       </div>
       <div class="hero">
         <div class="eyebrow">عرض الأسبوع</div>
-        <h1>خصومات حتى ٥٠٪ على الإلكترونيات</h1>
+        <h1>خصومات حتى ٥٠٪ على أحدث الأجهزة</h1>
         <div class="sub">شحن سريع لجميع محافظات الضفة والقدس</div>
-        <button class="cta" onclick="openCategory('electronics')">تسوّق الآن</button>
+        <button class="cta" onclick="openCategory('apple')">تسوّق الآن</button>
       </div>
       <div class="dots"><span class="on"></span><span></span><span></span></div>
 
@@ -487,6 +498,7 @@
     <!-- ===================== SEARCH / CATEGORY VIEW ===================== -->
     <section class="view" data-view="search">
       <div class="filterbar" id="filter-chips"></div>
+      <div class="spec-filter-row" id="spec-filter-row"></div>
       <div class="grid" id="search-grid"></div>
       <div class="empty" id="search-empty" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.8-3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -709,7 +721,52 @@
         <label for="af-desc">وصف قصير</label>
         <input id="af-desc" placeholder="جملة أو جملتين عن المنتج">
       </div>
+
+      <div class="section" style="padding:6px 0 0;"><div class="section-head" style="margin-bottom:6px;"><h2 style="font-size:14px;">مواصفات الجهاز — اختياري</h2></div></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="af-os">نظام التشغيل</label>
+          <select id="af-os">
+            <option value="">—</option>
+            <option value="iOS">iOS</option>
+            <option value="iPadOS">iPadOS</option>
+            <option value="watchOS">watchOS</option>
+            <option value="Android">Android</option>
+            <option value="Wear OS">Wear OS</option>
+            <option value="Windows">Windows</option>
+            <option value="macOS">macOS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="af-year">سنة الإصدار</label>
+          <input id="af-year" placeholder="مثال: 2024">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="af-storage">سعة التخزين</label>
+          <input id="af-storage" placeholder="مثال: 128GB">
+        </div>
+        <div class="form-group">
+          <label for="af-ram">الذاكرة (RAM)</label>
+          <input id="af-ram" placeholder="مثال: 8GB">
+        </div>
+      </div>
       <div class="form-group">
+        <label for="af-esim">eSIM</label>
+        <select id="af-esim">
+          <option value="">—</option>
+          <option value="yes">يدعم eSIM</option>
+          <option value="esim-only">eSIM فقط</option>
+          <option value="no">لا يدعم</option>
+        </select>
+      </div>
+      <div class="form-row" style="padding:2px 16px 4px;">
+        <button type="button" class="chip" id="af-nfc-chip" style="flex:1;" onclick="toggleFormSpecChip('nfc')">NFC</button>
+        <button type="button" class="chip" id="af-5g-chip" style="flex:1;" onclick="toggleFormSpecChip('fiveG')">5G</button>
+      </div>
+
+      <div class="form-group" style="padding-top:10px;">
         <label for="af-photo">صورة المنتج — اختياري</label>
         <input id="af-photo" type="file" accept="image/*" onchange="handlePhotoSelect(this)" style="padding:9px 12px;">
         <img id="af-photo-preview" style="display:none; margin-top:10px; width:100%; max-height:200px; object-fit:cover; border-radius:var(--radius-s); border:1px solid var(--border);">
@@ -804,56 +861,80 @@ const ICONS = {
   refresh: `<svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0 1 13.7-5.7L20 8M4 12a8 8 0 0 0 13.7 5.7L20 16M20 8v-4m0 4h-4M4 16v4m0-4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   check: `<svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4.5 4.5L19 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   box: `<svg viewBox="0 0 24 24" fill="none"><path d="M3.5 7 12 3l8.5 4-8.5 4-8.5-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M3.5 7v10L12 21l8.5-4V7M12 11v10" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+  tablet: `<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="18" r="0.9" fill="currentColor"/></svg>`,
+  pencil: `<svg viewBox="0 0 24 24" fill="none"><path d="M4 20l1-4L15.5 5.5l3 3L8 20l-4 1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.7 7.3l3 3" stroke="currentColor" stroke-width="1.5"/></svg>`,
+  desktop: `<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  apple: `<svg viewBox="0 0 24 24" fill="none"><path d="M15.8 8.7c-1.3-1-2.9-.8-3.8 0-.9-.8-2.5-1-3.8 0C6.4 10.3 5.9 13 7 15.6c1.1 2.5 2.5 4.4 4 4.4.9 0 1.2-.4 2-.4s1.1.4 2 .4c1.5 0 3.1-2.2 4.1-4.6.6-1.6.7-2.8.5-3.6-1.1-.3-2.6-1.3-3.4-3.1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M12.7 5.2c.3-1.1 1.3-1.9 2.4-2-.1 1.1-1 2.1-2.1 2.2-.1 0-.2 0-.3-.2Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
+  galaxy: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.8 5.8l2.6 2.6M15.6 15.6l2.6 2.6M18.2 5.8l-2.6 2.6M8.4 15.6l-2.6 2.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="2.4" stroke="currentColor" stroke-width="1.6"/></svg>`,
 };
 
 /* ============================================================
    CATEGORY + PRODUCT DATA
    ============================================================ */
-const CATEGORIES = [
-  {id:'electronics', name:'إلكترونيات', icon:'phone'},
-  {id:'fashion-m', name:'أزياء رجالية', icon:'shirt'},
-  {id:'fashion-w', name:'أزياء نسائية', icon:'dress'},
-  {id:'shoes', name:'أحذية', icon:'shoe'},
-  {id:'home', name:'المنزل والمطبخ', icon:'home'},
-  {id:'beauty', name:'الجمال والعناية', icon:'drop'},
-  {id:'accessories', name:'إكسسوارات', icon:'watch'},
-  {id:'sports', name:'رياضة ولياقة', icon:'dumbbell'},
-  {id:'toys', name:'ألعاب وهوايات', icon:'toy'},
-  {id:'grocery', name:'سوبر ماركت', icon:'basket'},
+// GROUPS are the 5 main sections shown on the home page.
+const GROUPS = [
+  {id:'apple', name:'Apple', icon:'apple'},
+  {id:'galaxy', name:'Samsung Galaxy', icon:'galaxy'},
+  {id:'computer', name:'أجهزة حاسوب', icon:'desktop'},
+  {id:'mobile-accessories', name:'Mobile Accessories', icon:'bag'},
+  {id:'used', name:'أجهزة مستخدمة', icon:'refresh'},
 ];
+// CATEGORIES are the specific leaf categories every product belongs to,
+// each tagged with which GROUP it falls under.
+const CATEGORIES = [
+  {id:'iphone', name:'iPhone', icon:'phone', group:'apple'},
+  {id:'ipad', name:'iPad', icon:'tablet', group:'apple'},
+  {id:'apple-watch', name:'Apple Watch', icon:'watch', group:'apple'},
+  {id:'apple-pencil', name:'Apple Pencil', icon:'pencil', group:'apple'},
+  {id:'airpods', name:'AirPods', icon:'headphones', group:'apple'},
+  {id:'galaxy-phone', name:'Galaxy Smartphones', icon:'phone', group:'galaxy'},
+  {id:'galaxy-tab', name:'Galaxy Tab', icon:'tablet', group:'galaxy'},
+  {id:'galaxy-watch', name:'Galaxy Watch', icon:'watch', group:'galaxy'},
+  {id:'galaxy-buds', name:'Galaxy Buds', icon:'headphones', group:'galaxy'},
+  {id:'desktop', name:'Desktop Computer', icon:'desktop', group:'computer'},
+  {id:'laptop', name:'Laptop', icon:'laptop', group:'computer'},
+  {id:'mobile-accessories', name:'Mobile Accessories', icon:'bag', group:'mobile-accessories'},
+  {id:'used-iphone', name:'iPhone (مستعمل)', icon:'refresh', group:'used'},
+  {id:'used-galaxy', name:'Galaxy (مستعمل)', icon:'refresh', group:'used'},
+  {id:'used-other', name:'أجهزة أخرى (مستعمل)', icon:'refresh', group:'used'},
+];
+function groupOf(catId){ return CATEGORIES.find(c => c.id === catId)?.group; }
 
 let uid = 1;
-function P(cat, icon, name, price, oldPrice, rating, sold, desc, opts){
-  return {id:'p'+(uid++), cat, icon, name, price, oldPrice:oldPrice||null, rating, sold, desc, opts:opts||null, fav:false};
+// specs = {os, storage, ram, nfc, fiveG, esim, year} — all optional.
+function P(cat, icon, name, price, oldPrice, rating, sold, desc, opts, specs){
+  return {id:'p'+(uid++), cat, icon, name, price, oldPrice:oldPrice||null, rating, sold, desc, opts:opts||null, specs:specs||null, fav:false};
 }
 const STATIC_PRODUCTS = [
-  P('electronics','phone','سماعة بلوتوث لاسلكية بعزل ضوضاء',129,189,4.6,'2.3k','سماعة رأس لاسلكية بتقنية عزل الضوضاء النشط، بطارية تدوم حتى ٣٠ ساعة، ومقاومة للعرق مثالية للرياضة والسفر.',{color:['أسود','أبيض','أزرق']}),
-  P('electronics','watch','ساعة ذكية متعددة الرياضات',219,299,4.5,'1.8k','ساعة ذكية بشاشة AMOLED، تتبع معدل ضربات القلب والنوم، مقاومة للماء، وتنبيهات المكالمات والرسائل.',{color:['أسود','فضي','ذهبي']}),
-  P('electronics','laptop','حامل لابتوب ألمنيوم قابل للطي',65,null,4.7,'940','حامل مريح وخفيف الوزن، يرفع الشاشة لمستوى النظر لتقليل إجهاد الرقبة، متوافق مع جميع المقاسات.',null),
-  P('electronics','speaker','مكبر صوت محمول مقاوم للماء',95,140,4.4,'1.2k','صوت نقي ٣٦٠ درجة، مقاومة IPX7 للماء، اتصال بلوتوث ٥.٣، وبطارية تدوم ١٢ ساعة تشغيل متواصل.',{color:['أسود','أحمر','رمادي']}),
-  P('electronics','phone','شاحن سريع ٣ منافذ ٦٥ واط',48,null,4.3,'650','شاحن USB-C سريع بثلاث منافذ، يشحن اللابتوب والهاتف معًا بأمان تام وحماية من ارتفاع الحرارة.',null),
-  P('fashion-m','shirt','قميص قطني كلاسيكي رجالي',75,110,4.5,'820','قماش قطني ١٠٠٪ مريح ومسامي، قصة عصرية تناسب الإطلالة الرسمية وغير الرسمية.',{size:['S','M','L','XL','XXL'],color:['أبيض','كحلي','رمادي']}),
-  P('fashion-m','shirt','جاكيت شتوي مبطن مقاوم للرياح',159,220,4.6,'410','جاكيت دافئ بتبطين داخلي كثيف، خامة مقاومة للرياح والماء الخفيف، مثالي لفصل الشتاء.',{size:['M','L','XL'],color:['أسود','زيتي']}),
-  P('fashion-w','dress','فستان صيفي واسع بطبعة زهور',98,null,4.4,'560','فستان خفيف مريح للأجواء الحارة، قماش تنفسي وقصة واسعة تناسب جميع القوامات.',{size:['S','M','L'],color:['وردي','أزرق فاتح']}),
-  P('fashion-w','shirt','عباية سوداء تطريز أنيق',185,250,4.7,'730','عباية فاخرة بتطريز يدوي على الأكمام، قماش كريب عالي الجودة لا يشف ولا يتجعد.',{size:['52','54','56','58']}),
-  P('shoes','shoe','حذاء رياضي خفيف للجري',139,190,4.5,'1.5k','نعل مرن يمتص الصدمات، تهوية ممتازة، ومناسب للجري اليومي والمشي الطويل.',{size:['40','41','42','43','44'],color:['أبيض','أسود']}),
-  P('shoes','shoe','حذاء جلد كلاسيكي رجالي',175,null,4.3,'320','حذاء جلد طبيعي بتصميم كلاسيكي أنيق يناسب المناسبات الرسمية والعمل.',{size:['41','42','43','44']}),
-  P('home','pot','طقم قدور طبخ غير لاصقة (٦ قطع)',249,340,4.6,'610','طقم قدور بطلاء غير لاصق صحي، توزيع حرارة متساوٍ، ومقابض عازلة للحرارة.',null),
-  P('home','lamp','مصباح مكتب LED قابل للتعديل',55,null,4.4,'890','إضاءة LED بثلاث درجات حرارة لونية، ذراع قابل للطي، ومنفذ USB لشحن الهاتف.',{color:['أبيض','أسود']}),
-  P('home','home','منظم أدراج مطبخ قابل للتعديل',38,null,4.2,'270','فواصل بلاستيكية قابلة للتعديل لتنظيم أدوات المطبخ والأدراج بسهولة وأناقة.',null),
-  P('beauty','drop','سيروم فيتامين C للعناية بالبشرة',89,120,4.6,'1.1k','سيروم مركز يفتح البشرة ويوحد لونها، يقلل الهالات الداكنة مع الاستخدام المنتظم.',null),
-  P('beauty','lips','طقم أحمر شفاه مطفي (٦ ألوان)',72,null,4.4,'430','تركيبة مطفية طويلة الثبات لا تجفف الشفاه، بمجموعة ألوان تناسب جميع الإطلالات.',null),
-  P('beauty','drop','شامبو طبيعي لتقوية الشعر',42,60,4.3,'980','تركيبة خالية من السلفات بخلاصة الأرغان، يقوي بصيلات الشعر ويمنحه لمعانًا صحيًا.',null),
-  P('accessories','watch','ساعة يد كلاسيكية جلدية',159,220,4.5,'540','ساعة أنيقة بسوار جلد طبيعي وحركة يابانية دقيقة، مناسبة للإطلالات الرسمية.',{color:['بني','أسود']}),
-  P('accessories','bag','حقيبة ظهر عملية مقاومة للماء',110,150,4.6,'760','حقيبة واسعة بجيب مخصص للابتوب، خامة مقاومة للماء، ومريحة للاستخدام اليومي والسفر.',{color:['أسود','رمادي','كحلي']}),
-  P('accessories','bag','محفظة جلد طبيعي رجالية',68,null,4.4,'390','محفظة أنيقة بعدة جيوب للبطاقات والنقود، جلد طبيعي عالي الجودة ومتين.',null),
-  P('sports','dumbbell','طقم دامبل قابل للتعديل ٢٠كغ',249,null,4.7,'310','طقم أوزان قابل للتعديل يناسب التمارين المنزلية لمختلف مستويات اللياقة.',null),
-  P('sports','ball','كرة قدم احترافية مقاس ٥',55,75,4.5,'480','كرة معتمدة بمواصفات احترافية، خياطة متينة وتحكم ممتاز أثناء اللعب.',null),
-  P('sports','dumbbell','سجادة يوغا مانعة للانزلاق',48,null,4.6,'700','سجادة سميكة مريحة للمفاصل بسطح مانع للانزلاق، مثالية لليوغا وتمارين الأرضية.',{color:['بنفسجي','أزرق','رمادي']}),
-  P('toys','toy','مجسم بناء تفاعلي للأطفال (٥٠٠ قطعة)',95,130,4.6,'610','لعبة بناء تحفز الإبداع والتفكير المنطقي، قطع آمنة ومتوافقة مع المقاسات القياسية.',null),
-  P('toys','gift','دمية دب قطيفة ناعمة كبيرة',60,null,4.7,'520','دمية قطيفة فائقة النعومة، حجم كبير مثالي كهدية للأطفال في جميع المناسبات.',null),
-  P('grocery','basket','سلة تمور فلسطينية فاخرة ١كغ',65,null,4.8,'260','تمور مجدول فلسطينية طازجة من الأغوار، معبأة بعناية في سلة هدايا أنيقة.',null),
-  P('grocery','basket','زيت زيتون بكر ممتاز فلسطيني ١لتر',48,60,4.9,'890','زيت زيتون بكر ممتاز معصور على البارد من أشجار زيتون فلسطينية عريقة.',null),
+  P('iphone','phone','iPhone 15 Pro Max',4899,5299,4.9,'410','شاشة Super Retina XDR، شريحة A17 Pro، وكاميرا احترافية بثلاث عدسات. الجهاز أصلي وبكفالة الوكيل.',{color:['تيتانيوم طبيعي','أزرق','أسود'],storage:['256GB','512GB','1TB']},{os:'iOS',storage:'256GB',ram:'8GB',nfc:true,fiveG:true,esim:'yes',year:'2023'}),
+  P('iphone','phone','iPhone 14',3399,3699,4.8,'620','شاشة Super Retina XDR بحجم 6.1 إنش، كاميرا مزدوجة متقدمة، وأداء قوي مع بطارية تدوم طوال اليوم.',{color:['أسود','أزرق','أصفر'],storage:['128GB','256GB']},{os:'iOS',storage:'128GB',ram:'6GB',nfc:true,fiveG:true,esim:'yes',year:'2022'}),
+  P('iphone','phone','iPhone 13',2699,null,4.7,'890','أداء ممتاز بسعر مناسب، كاميرا مزدوجة احترافية وشاشة Super Retina XDR ساطعة.',{color:['أزرق منتصف الليل','أحمر','أبيض'],storage:['128GB','256GB']},{os:'iOS',storage:'128GB',ram:'4GB',nfc:true,fiveG:true,esim:'yes',year:'2021'}),
+  P('ipad','tablet','iPad Air (الجيل الخامس)',2199,2399,4.8,'260','شريحة M1 القوية، شاشة Liquid Retina مقاس 10.9 إنش، ودعم Apple Pencil للإبداع والإنتاجية.',{color:['أزرق','وردي','فضي'],storage:['64GB','256GB']},{os:'iPadOS',storage:'64GB',ram:'8GB',nfc:false,fiveG:false,esim:'no',year:'2022'}),
+  P('ipad','tablet','iPad (الجيل العاشر)',1499,null,4.6,'340','تصميم عصري بشاشة 10.9 إنش، مثالي للدراسة والترفيه اليومي.',{color:['أزرق','وردي','أصفر'],storage:['64GB','256GB']},{os:'iPadOS',storage:'64GB',ram:'4GB',nfc:false,fiveG:false,esim:'no',year:'2022'}),
+  P('apple-watch','watch','Apple Watch Series 9',1599,1799,4.8,'310','شاشة Always-On أكثر سطوعًا، تتبع صحي متقدم للقلب والنوم، ومقاومة كاملة للماء.',{color:['منتصف الليل','فضي','وردي'],size:['41mm','45mm']},{os:'watchOS',nfc:true,fiveG:false,esim:'yes',year:'2023'}),
+  P('apple-watch','watch','Apple Watch SE',999,1099,4.6,'480','كل أساسيات آبل ووتش بسعر مناسب — تتبع اللياقة والصحة والإشعارات على معصمك.',{color:['منتصف الليل','نجمي'],size:['40mm','44mm']},{os:'watchOS',nfc:true,fiveG:false,esim:'yes',year:'2022'}),
+  P('apple-pencil','pencil','Apple Pencil (الجيل الثاني)',499,null,4.7,'190','شحن وإقران لاسلكي، استجابة فورية للكتابة والرسم، متوافق مع أجهزة iPad Pro وAir.',null,{year:'2022'}),
+  P('airpods','headphones','AirPods Pro (الجيل الثاني)',899,999,4.8,'720','إلغاء ضوضاء نشط محسّن، وضع الشفافية التكيفي، وعلبة شحن بمنفذ USB-C.',null,{year:'2023'}),
+  P('airpods','headphones','AirPods (الجيل الثالث)',599,650,4.6,'540','صوت مكاني مع تتبع الحركة، تصميم مريح للأذن، ومقاومة للعرق والماء.',null,{year:'2022'}),
+  P('galaxy-phone','phone','Samsung Galaxy S24 Ultra',4599,4999,4.8,'380','قلم S Pen مدمج، كاميرا 200 ميجابكسل، وشاشة Dynamic AMOLED 2X مقاس 6.8 إنش.',{color:['أسود','رمادي','بنفسجي'],storage:['256GB','512GB']},{os:'Android',storage:'256GB',ram:'12GB',nfc:true,fiveG:true,esim:'yes',year:'2024'}),
+  P('galaxy-phone','phone','Samsung Galaxy A55',1699,1899,4.6,'510','شاشة Super AMOLED حيوية، تصميم متين مقاوم للماء، وكاميرا ثلاثية بأداء ممتاز نهارًا وليلاً.',{color:['أزرق','أسود','ليمون'],storage:['128GB','256GB']},{os:'Android',storage:'128GB',ram:'8GB',nfc:true,fiveG:true,esim:'no',year:'2024'}),
+  P('galaxy-phone','phone','Samsung Galaxy A15',999,null,4.4,'640','أداء يومي موثوق بسعر اقتصادي، شاشة كبيرة وبطارية تدوم طويلاً.',{color:['أزرق','أسود'],storage:['128GB']},{os:'Android',storage:'128GB',ram:'6GB',nfc:false,fiveG:false,esim:'no',year:'2023'}),
+  P('galaxy-tab','tablet','Samsung Galaxy Tab S9',2299,2599,4.7,'170','شاشة Dynamic AMOLED 2X مقاومة للماء، ومعالج Snapdragon قوي للألعاب والإنتاجية.',{color:['رمادي','بيج'],storage:['128GB','256GB']},{os:'Android',storage:'128GB',ram:'8GB',nfc:true,fiveG:false,esim:'no',year:'2023'}),
+  P('galaxy-watch','watch','Samsung Galaxy Watch 6',1199,1349,4.6,'220','تتبع دقيق للنوم والصحة، إطار كلاسيكي أنيق، وشاشة ساطعة سهلة القراءة تحت الشمس.',{color:['أسود','فضي'],size:['40mm','44mm']},{os:'Wear OS',nfc:true,fiveG:false,esim:'yes',year:'2023'}),
+  P('galaxy-buds','headphones','Samsung Galaxy Buds2 Pro',549,650,4.5,'380','إلغاء ضوضاء نشط ذكي، صوت عالي الدقة 24-bit، وتصميم خفيف مريح لساعات الاستخدام الطويلة.',null,{year:'2022'}),
+  P('desktop','desktop','iMac 24-inch M3',3899,null,4.8,'90','شاشة Retina 4.5K رائعة الألوان، شريحة M3 فائقة السرعة، وتصميم أنيق فائق النحافة.',{color:['أزرق','فضي','وردي']},{os:'macOS',storage:'256GB',ram:'8GB',year:'2023'}),
+  P('desktop','desktop','جهاز مكتبي Dell Gaming',3299,3699,4.6,'140','معالج Intel Core i7 وكرت شاشة مخصص، مثالي للألعاب والتصميم والمونتاج.',null,{os:'Windows',storage:'512GB',ram:'16GB',year:'2023'}),
+  P('laptop','laptop','MacBook Air M2',4299,4699,4.9,'260','تصميم رفيع فائق الخفة، شريحة M2 بأداء استثنائي، وبطارية تدوم طوال اليوم دون شحن.',{color:['نجمي','منتصف الليل','فضي']},{os:'macOS',storage:'256GB',ram:'8GB',year:'2023'}),
+  P('laptop','laptop','Dell XPS 13',3199,3499,4.7,'190','شاشة InfinityEdge مذهلة، هيكل ألمنيوم متين، وأداء قوي في تصميم محمول أنيق.',null,{os:'Windows',storage:'512GB',ram:'16GB',year:'2023'}),
+  P('laptop','laptop','Lenovo IdeaPad الأساسي',1699,null,4.3,'310','خيار موثوق للاستخدام اليومي والدراسة والعمل المكتبي بسعر مناسب.',null,{os:'Windows',storage:'256GB',ram:'8GB',year:'2022'}),
+  P('mobile-accessories','bag','شاحن سريع 3 منافذ 65 واط',48,null,4.3,'650','شاحن USB-C سريع بثلاث منافذ، يشحن اللابتوب والهاتف معًا بأمان تام وحماية من ارتفاع الحرارة.',null,null),
+  P('mobile-accessories','bag','جراب حماية شفاف مقاوم للصدمات',35,null,4.5,'980','حماية كاملة لأطراف الجهاز والكاميرا، شفاف يحافظ على تصميم الجهاز الأصلي.',{color:['شفاف','أسود']},null),
+  P('mobile-accessories','watch','شاحن لاسلكي MagSafe',89,120,4.4,'410','شحن لاسلكي سريع ومغناطيسي بمحاذاة مثالية تلقائية لهاتفك.',null,null),
+  P('mobile-accessories','speaker','سماعة بلوتوث محمولة',95,140,4.4,'520','صوت نقي 360 درجة، مقاومة للماء IPX7، وبطارية تدوم 12 ساعة تشغيل متواصل.',{color:['أسود','أحمر']},null),
+  P('used-iphone','refresh','iPhone 12 — مستعمل (حالة ممتازة)',1699,1899,4.5,'75','بطارية 88٪، فحص شامل، بدون خدوش تُذكر، مع كفالة شهر من المتجر.',{storage:['64GB','128GB']},{os:'iOS',storage:'64GB',ram:'4GB',nfc:true,fiveG:true,esim:'yes',year:'2020'}),
+  P('used-iphone','refresh','iPhone 11 — مستعمل (حالة جيدة جدًا)',1199,1350,4.3,'60','أداء موثوق وسعر ممتاز، تم فحصه بالكامل قبل العرض للبيع.',{storage:['64GB','128GB']},{os:'iOS',storage:'64GB',ram:'4GB',nfc:true,fiveG:false,esim:'yes',year:'2019'}),
+  P('used-galaxy','refresh','Samsung Galaxy S21 — مستعمل',1099,1250,4.4,'55','حالة ممتازة، شاشة سليمة بالكامل، وبطارية تدوم يوم كامل بالاستخدام العادي.',{storage:['128GB']},{os:'Android',storage:'128GB',ram:'8GB',nfc:true,fiveG:true,esim:'no',year:'2021'}),
+  P('used-other','refresh','iPad (الجيل السابع) — مستعمل',799,null,4.2,'40','خيار اقتصادي ممتاز للدراسة والترفيه، تم فحصه واختباره بالكامل.',null,{os:'iPadOS',storage:'32GB',year:'2019'}),
 ];
 
 // PRODUCTS is what every screen renders from: the built-in demo catalog
@@ -874,6 +955,7 @@ let currentOptions = {};
 let currentQty = 1;
 let activeCategory = 'all';
 let navStack = ['home'];
+let specFilters = { os:'all', storage:'all', year:'all', nfc:false, fiveG:false, esim:'all', priceMin:'', priceMax:'' };
 let selectedPay = 'cod';
 let trackingOrderId = null;
 
@@ -960,14 +1042,29 @@ function productThumbSVG(p, size){
   </div>`;
 }
 function bgForCat(cat){
-  const tealCats = ['electronics','accessories','sports','grocery'];
-  return tealCats.includes(cat) ? 'var(--brand-tint)' : 'var(--accent-tint)';
+  const tealGroups = ['apple','computer','mobile-accessories'];
+  return tealGroups.includes(groupOf(cat)) ? 'var(--brand-tint)' : 'var(--accent-tint)';
 }
 function colorForCat(cat){
-  const tealCats = ['electronics','accessories','sports','grocery'];
-  return tealCats.includes(cat) ? 'var(--brand)' : 'var(--accent-dark)';
+  const tealGroups = ['apple','computer','mobile-accessories'];
+  return tealGroups.includes(groupOf(cat)) ? 'var(--brand)' : 'var(--accent-dark)';
 }
 function discountPct(p){ return Math.round((1 - p.price/p.oldPrice)*100); }
+function specsToRows(specs){
+  if(!specs) return [];
+  const rows = [];
+  if(specs.os) rows.push(['نظام التشغيل', specs.os]);
+  if(specs.storage) rows.push(['سعة التخزين', specs.storage]);
+  if(specs.ram) rows.push(['الذاكرة (RAM)', specs.ram]);
+  if(specs.year) rows.push(['سنة الإصدار', specs.year]);
+  if(specs.nfc !== undefined && specs.nfc !== null) rows.push(['NFC', specs.nfc ? 'يدعم' : 'لا يدعم']);
+  if(specs.fiveG !== undefined && specs.fiveG !== null) rows.push(['5G', specs.fiveG ? 'يدعم' : 'لا يدعم']);
+  if(specs.esim){
+    const label = specs.esim === 'esim-only' ? 'eSIM فقط (بدون شريحة فعلية)' : specs.esim === 'yes' ? 'يدعم eSIM' : 'لا يدعم eSIM';
+    rows.push(['eSIM', label]);
+  }
+  return rows;
+}
 
 function cardHTML(p){
   return `<div class="card" onclick="openProduct('${p.id}')">
@@ -985,16 +1082,13 @@ function cardHTML(p){
 
 function renderHome(){
   const rail = document.getElementById('cat-rail');
-  rail.innerHTML = CATEGORIES.map((c,i) => `
-    <div class="cat-item ${i%2? 'alt':''}" onclick="openCategory('${c.id}')">
-      <div class="cat-circle">${ICONS[c.icon]}</div>
-      <span>${c.name}</span>
+  rail.innerHTML = GROUPS.map((g,i) => `
+    <div class="cat-item ${i%2? 'alt':''}" onclick="openCategory('${g.id}')">
+      <div class="cat-circle">${ICONS[g.icon]}</div>
+      <span>${g.name}</span>
     </div>`).join('');
 
   const deals = PRODUCTS.filter(p => p.oldPrice).slice(0,8);
-  document.getElementById('deal-rail').innerHTML = deals.map(p => `<div class="card">${cardHTML(p)}</div>`).join('')
-    .replace(/<div class="card"><div class="card">/g,'<div class="card">').replace(/<\/div>\s*<\/div>$/,'</div>');
-  // simpler: just render cards directly
   document.getElementById('deal-rail').innerHTML = deals.map(p => cardHTML(p)).join('');
 
   const bestSellers = [...PRODUCTS].sort((a,b) => parseSold(b.sold)-parseSold(a.sold)).slice(0,8);
@@ -1006,21 +1100,29 @@ function parseSold(s){ return parseFloat(s) * (s.includes('k') ? 1000 : 1); }
    RENDER: SEARCH / CATEGORY
    ============================================================ */
 function renderFilterChips(){
-  const chips = [{id:'all',name:'الكل'}, {id:'deals',name:'عروض ⚡'}, ...CATEGORIES];
+  const chips = [{id:'all',name:'الكل'}, {id:'deals',name:'عروض ⚡'}, ...GROUPS, ...CATEGORIES];
   document.getElementById('filter-chips').innerHTML = chips.map(c => `
     <button class="chip ${activeCategory===c.id?'on':''}" onclick="setCategory('${c.id}')">${c.name}</button>
   `).join('');
 }
 function setCategory(id){ activeCategory = id; renderSearch(); }
+function isGroupId(id){ return GROUPS.some(g => g.id === id); }
 
-function renderSearch(){
-  renderFilterChips();
+function computeFilteredList(){
   const q = (document.getElementById('search-input').value || '').trim();
   let list = PRODUCTS;
   if(activeCategory === 'deals') list = list.filter(p => p.oldPrice);
-  else if(activeCategory !== 'all') list = list.filter(p => p.cat === activeCategory);
+  else if(activeCategory !== 'all'){
+    list = isGroupId(activeCategory)
+      ? list.filter(p => groupOf(p.cat) === activeCategory)
+      : list.filter(p => p.cat === activeCategory);
+  }
   if(q) list = list.filter(p => p.name.includes(q));
+  return applySpecFilters(list);
+}
 
+function renderSearchGrid(){
+  const list = computeFilteredList();
   const grid = document.getElementById('search-grid');
   const empty = document.getElementById('search-empty');
   if(list.length === 0){
@@ -1029,6 +1131,73 @@ function renderSearch(){
     empty.style.display = 'none';
     grid.innerHTML = list.map(p => cardHTML(p)).join('');
   }
+}
+
+function renderSearch(){
+  renderFilterChips();
+  renderSpecFilters();
+  renderSearchGrid();
+}
+
+/* ---- spec/attribute filters (price, OS, storage, RAM, NFC, 5G, eSIM, year) ---- */
+function renderSpecFilters(){
+  const oses = [...new Set(PRODUCTS.map(p => p.specs && p.specs.os).filter(Boolean))].sort();
+  const storages = [...new Set(PRODUCTS.map(p => p.specs && p.specs.storage).filter(Boolean))];
+  const years = [...new Set(PRODUCTS.map(p => p.specs && p.specs.year).filter(Boolean))].sort().reverse();
+
+  document.getElementById('spec-filter-row').innerHTML = `
+    <select class="spec-select ${specFilters.os!=='all'?'active':''}" onchange="setSpecFilter('os', this.value)">
+      <option value="all">نظام التشغيل: الكل</option>
+      ${oses.map(o => `<option value="${o}" ${specFilters.os===o?'selected':''}>${o}</option>`).join('')}
+    </select>
+    <select class="spec-select ${specFilters.storage!=='all'?'active':''}" onchange="setSpecFilter('storage', this.value)">
+      <option value="all">التخزين: الكل</option>
+      ${storages.map(s => `<option value="${s}" ${specFilters.storage===s?'selected':''}>${s}</option>`).join('')}
+    </select>
+    <select class="spec-select ${specFilters.year!=='all'?'active':''}" onchange="setSpecFilter('year', this.value)">
+      <option value="all">سنة الإصدار: الكل</option>
+      ${years.map(y => `<option value="${y}" ${specFilters.year===String(y)?'selected':''}>${y}</option>`).join('')}
+    </select>
+    <select class="spec-select ${specFilters.esim!=='all'?'active':''}" onchange="setSpecFilter('esim', this.value)">
+      <option value="all">eSIM: الكل</option>
+      <option value="yes" ${specFilters.esim==='yes'?'selected':''}>يدعم eSIM</option>
+      <option value="esim-only" ${specFilters.esim==='esim-only'?'selected':''}>eSIM فقط</option>
+      <option value="no" ${specFilters.esim==='no'?'selected':''}>بدون eSIM</option>
+    </select>
+    <button class="chip ${specFilters.nfc?'on':''}" onclick="toggleSpecFilter('nfc')">NFC</button>
+    <button class="chip ${specFilters.fiveG?'on':''}" onclick="toggleSpecFilter('fiveG')">5G</button>
+    <div class="price-range">
+      <input type="number" inputmode="decimal" placeholder="من" value="${specFilters.priceMin}" oninput="setPriceFilter('priceMin', this.value)">
+      <span>—</span>
+      <input type="number" inputmode="decimal" placeholder="إلى" value="${specFilters.priceMax}" oninput="setPriceFilter('priceMax', this.value)">
+      <span>₪</span>
+    </div>
+    ${hasActiveSpecFilters() ? `<button class="spec-reset" onclick="resetSpecFilters()">إعادة تعيين ✕</button>` : ''}
+  `;
+}
+function setSpecFilter(key, val){ specFilters[key] = val; renderSearch(); }
+// Price inputs re-render the grid only (not the filter row itself), so the
+// input keeps focus and cursor position while the person is still typing.
+function setPriceFilter(key, val){ specFilters[key] = val; renderSearchGrid(); }
+function toggleSpecFilter(key){ specFilters[key] = !specFilters[key]; renderSearch(); }
+function hasActiveSpecFilters(){
+  return specFilters.os!=='all' || specFilters.storage!=='all' || specFilters.year!=='all' || specFilters.esim!=='all' || specFilters.nfc || specFilters.fiveG || specFilters.priceMin || specFilters.priceMax;
+}
+function resetSpecFilters(){
+  specFilters = { os:'all', storage:'all', year:'all', nfc:false, fiveG:false, esim:'all', priceMin:'', priceMax:'' };
+  renderSearch();
+}
+function applySpecFilters(list){
+  let out = list;
+  if(specFilters.os !== 'all') out = out.filter(p => p.specs && p.specs.os === specFilters.os);
+  if(specFilters.storage !== 'all') out = out.filter(p => p.specs && p.specs.storage === specFilters.storage);
+  if(specFilters.year !== 'all') out = out.filter(p => p.specs && String(p.specs.year) === specFilters.year);
+  if(specFilters.esim !== 'all') out = out.filter(p => p.specs && p.specs.esim === specFilters.esim);
+  if(specFilters.nfc) out = out.filter(p => p.specs && p.specs.nfc === true);
+  if(specFilters.fiveG) out = out.filter(p => p.specs && p.specs.fiveG === true);
+  if(specFilters.priceMin) out = out.filter(p => p.price >= parseFloat(specFilters.priceMin));
+  if(specFilters.priceMax) out = out.filter(p => p.price <= parseFloat(specFilters.priceMax));
+  return out;
 }
 
 function toggleFav(id){
@@ -1065,7 +1234,7 @@ function renderProductDetail(){
   let optsHTML = '';
   if(p.opts){
     Object.entries(p.opts).forEach(([key, values]) => {
-      const label = key === 'color' ? 'اللون' : key === 'size' ? 'المقاس' : key;
+      const label = key === 'color' ? 'اللون' : key === 'size' ? 'المقاس' : key === 'storage' ? 'سعة التخزين' : key;
       optsHTML += `<div class="optblock">
         <div class="lbl">${label}: ${currentOptions[key]}</div>
         <div class="optrow">
@@ -1074,6 +1243,19 @@ function renderProductDetail(){
       </div>`;
     });
   }
+
+  const specRows = specsToRows(p.specs);
+  const specsHTML = specRows.length ? `
+      <div class="pd-desc" style="border-top:none; padding-top:4px; margin-top:0;">
+        <h4>المواصفات</h4>
+        <div style="display:flex; flex-direction:column; gap:0;">
+          ${specRows.map(([label,val]) => `
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:12.6px;">
+              <span style="color:var(--ink-soft);">${label}</span>
+              <span style="font-weight:700;">${val}</span>
+            </div>`).join('')}
+        </div>
+      </div>` : '';
 
   document.getElementById('pd-content').innerHTML = `
     <div class="pd-gallery" style="background:${bgForCat(p.cat)}">
@@ -1110,6 +1292,7 @@ function renderProductDetail(){
         <h4>وصف المنتج</h4>
         <p>${p.desc}</p>
       </div>
+      ${specsHTML}
       <div class="pd-desc" style="border-top:none; padding-top:4px; margin-top:0;">
         <h4>التقييمات (${SAMPLE_REVIEWS.length})</h4>
         ${SAMPLE_REVIEWS.map(r => `
@@ -1335,14 +1518,12 @@ const db = firebase.firestore();
 let firestoreProducts = [];
 let firestoreReady = false;
 let pendingImageDataUrl = null;
+let pendingFormSpecs = { nfc:false, fiveG:false };
 
 const ICON_LABELS = {
-  phone:'هاتف / إلكترونيات', headphones:'سماعات', laptop:'لابتوب', speaker:'مكبر صوت',
-  watch:'ساعة', shirt:'قميص', dress:'فستان', shoe:'حذاء',
-  home:'منزل', lamp:'إضاءة', pot:'مطبخ',
-  drop:'عناية وتجميل', lips:'مكياج',
-  bag:'حقيبة / إكسسوار', gift:'هدية / لعبة', toy:'لعبة',
-  dumbbell:'رياضة', ball:'رياضة (كرة)', basket:'سوبر ماركت'
+  phone:'هاتف', tablet:'تابلت', laptop:'لابتوب', desktop:'حاسوب مكتبي',
+  watch:'ساعة ذكية', pencil:'قلم / ستايلس', headphones:'سماعات', speaker:'مكبر صوت',
+  bag:'حقيبة / إكسسوار', refresh:'مستعمل / مجدّد'
 };
 
 // Live-syncs: fires immediately with current data, then again any time
@@ -1418,11 +1599,25 @@ function showAddProductForm(){
   document.getElementById('af-price').value = '';
   document.getElementById('af-oldprice').value = '';
   document.getElementById('af-desc').value = '';
-  document.getElementById('af-cat').value = activeCategory !== 'all' && activeCategory !== 'deals' ? activeCategory : 'electronics';
+  document.getElementById('af-cat').value = (activeCategory !== 'all' && activeCategory !== 'deals' && !isGroupId(activeCategory)) ? activeCategory : 'iphone';
+  document.getElementById('af-os').value = '';
+  document.getElementById('af-year').value = '';
+  document.getElementById('af-storage').value = '';
+  document.getElementById('af-ram').value = '';
+  document.getElementById('af-esim').value = '';
   document.getElementById('af-photo').value = '';
   document.getElementById('af-photo-preview').style.display = 'none';
   pendingImageDataUrl = null;
+  pendingFormSpecs = { nfc:false, fiveG:false };
+  document.getElementById('af-nfc-chip').classList.remove('on');
+  document.getElementById('af-5g-chip').classList.remove('on');
   go('admin-form');
+}
+
+function toggleFormSpecChip(key){
+  pendingFormSpecs[key] = !pendingFormSpecs[key];
+  const chipId = key === 'nfc' ? 'af-nfc-chip' : 'af-5g-chip';
+  document.getElementById(chipId).classList.toggle('on', pendingFormSpecs[key]);
 }
 
 // Resizes + compresses the chosen photo client-side (max 640px, JPEG ~60%)
@@ -1460,6 +1655,17 @@ function saveNewProduct(){
   const oldPrice = oldPriceRaw ? parseFloat(oldPriceRaw) : null;
   const desc = document.getElementById('af-desc').value.trim() || 'منتج جديد من AliPal.';
 
+  const os = document.getElementById('af-os').value;
+  const year = document.getElementById('af-year').value.trim();
+  const storage = document.getElementById('af-storage').value.trim();
+  const ram = document.getElementById('af-ram').value.trim();
+  const esim = document.getElementById('af-esim').value;
+  const hasAnySpec = os || year || storage || ram || esim || pendingFormSpecs.nfc || pendingFormSpecs.fiveG;
+  const specs = hasAnySpec ? {
+    os: os || null, year: year || null, storage: storage || null, ram: ram || null,
+    esim: esim || null, nfc: pendingFormSpecs.nfc, fiveG: pendingFormSpecs.fiveG
+  } : null;
+
   if(!name || !price || price <= 0){
     showToast('يرجى إدخال اسم المنتج والسعر');
     return;
@@ -1472,6 +1678,7 @@ function saveNewProduct(){
   const product = {
     cat, icon, name, price, oldPrice: oldPrice || null,
     rating: 5.0, sold: 'جديد', desc, opts: null, fav: false,
+    specs,
     image: pendingImageDataUrl || null,
     createdAt: Date.now()
   };
