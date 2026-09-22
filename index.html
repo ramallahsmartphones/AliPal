@@ -866,6 +866,7 @@ const ICONS = {
   desktop: `<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
   apple: `<svg viewBox="0 0 24 24" fill="none"><path d="M15.8 8.7c-1.3-1-2.9-.8-3.8 0-.9-.8-2.5-1-3.8 0C6.4 10.3 5.9 13 7 15.6c1.1 2.5 2.5 4.4 4 4.4.9 0 1.2-.4 2-.4s1.1.4 2 .4c1.5 0 3.1-2.2 4.1-4.6.6-1.6.7-2.8.5-3.6-1.1-.3-2.6-1.3-3.4-3.1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M12.7 5.2c.3-1.1 1.3-1.9 2.4-2-.1 1.1-1 2.1-2.1 2.2-.1 0-.2 0-.3-.2Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
   galaxy: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.8 5.8l2.6 2.6M15.6 15.6l2.6 2.6M18.2 5.8l-2.6 2.6M8.4 15.6l-2.6 2.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="2.4" stroke="currentColor" stroke-width="1.6"/></svg>`,
+  xiaomi: `<svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" stroke-width="1.6"/><path d="M13 7.5 9 13h3.3L11 16.5l4-5.5h-3.2L13 7.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>`,
 };
 
 /* ============================================================
@@ -878,6 +879,7 @@ const GROUPS = [
   {id:'computer', name:'أجهزة حاسوب', icon:'desktop'},
   {id:'mobile-accessories', name:'Mobile Accessories', icon:'bag'},
   {id:'used', name:'أجهزة مستخدمة', icon:'refresh'},
+  {id:'xiaomi', name:'Xiaomi', icon:'xiaomi'},
 ];
 // CATEGORIES are the specific leaf categories every product belongs to,
 // each tagged with which GROUP it falls under.
@@ -897,6 +899,11 @@ const CATEGORIES = [
   {id:'used-iphone', name:'iPhone (مستعمل)', icon:'refresh', group:'used'},
   {id:'used-galaxy', name:'Galaxy (مستعمل)', icon:'refresh', group:'used'},
   {id:'used-other', name:'أجهزة أخرى (مستعمل)', icon:'refresh', group:'used'},
+  {id:'xiaomi-phone', name:'Xiaomi Smartphones', icon:'phone', group:'xiaomi'},
+  {id:'redmi', name:'Redmi', icon:'phone', group:'xiaomi'},
+  {id:'poco', name:'POCO', icon:'phone', group:'xiaomi'},
+  {id:'xiaomi-buds', name:'Xiaomi Buds', icon:'headphones', group:'xiaomi'},
+  {id:'xiaomi-watch', name:'Xiaomi Band / Watch', icon:'watch', group:'xiaomi'},
 ];
 function groupOf(catId){ return CATEGORIES.find(c => c.id === catId)?.group; }
 
@@ -935,6 +942,12 @@ const STATIC_PRODUCTS = [
   P('used-iphone','refresh','iPhone 11 — مستعمل (حالة جيدة جدًا)',1199,1350,4.3,'60','أداء موثوق وسعر ممتاز، تم فحصه بالكامل قبل العرض للبيع.',{storage:['64GB','128GB']},{os:'iOS',storage:'64GB',ram:'4GB',nfc:true,fiveG:false,esim:'yes',year:'2019'}),
   P('used-galaxy','refresh','Samsung Galaxy S21 — مستعمل',1099,1250,4.4,'55','حالة ممتازة، شاشة سليمة بالكامل، وبطارية تدوم يوم كامل بالاستخدام العادي.',{storage:['128GB']},{os:'Android',storage:'128GB',ram:'8GB',nfc:true,fiveG:true,esim:'no',year:'2021'}),
   P('used-other','refresh','iPad (الجيل السابع) — مستعمل',799,null,4.2,'40','خيار اقتصادي ممتاز للدراسة والترفيه، تم فحصه واختباره بالكامل.',null,{os:'iPadOS',storage:'32GB',year:'2019'}),
+  P('xiaomi-phone','phone','Xiaomi 14',2899,3199,4.7,'290','معالج Snapdragon 8 Gen 3 فائق الأداء، كاميرا Leica احترافية، وشحن سريع 90 واط.',{color:['أسود','أبيض','أخضر'],storage:['256GB','512GB']},{os:'Android',storage:'256GB',ram:'12GB',nfc:true,fiveG:true,esim:'no',year:'2024'}),
+  P('redmi','phone','Redmi Note 13 Pro',1399,1599,4.5,'560','شاشة AMOLED منحنية بمعدل تحديث 120Hz، كاميرا 200 ميجابكسل، وبطارية تدوم طوال اليوم.',{color:['أسود','رمادي','أزرق'],storage:['128GB','256GB']},{os:'Android',storage:'128GB',ram:'8GB',nfc:true,fiveG:true,esim:'no',year:'2023'}),
+  P('redmi','phone','Redmi 13C',799,null,4.3,'710','خيار اقتصادي موثوق بشاشة كبيرة وبطارية 5000mAh تدوم طويلاً.',{color:['أسود','أزرق'],storage:['128GB']},{os:'Android',storage:'128GB',ram:'6GB',nfc:false,fiveG:false,esim:'no',year:'2023'}),
+  P('poco','phone','POCO X6 Pro',1599,1799,4.6,'320','أداء ألعاب قوي بمعالج Dimensity، شاشة AMOLED ساطعة، وشحن سريع 67 واط.',{color:['أسود','أصفر'],storage:['256GB','512GB']},{os:'Android',storage:'256GB',ram:'12GB',nfc:true,fiveG:true,esim:'no',year:'2024'}),
+  P('xiaomi-buds','headphones','Xiaomi Buds 4 Pro',449,550,4.5,'270','إلغاء ضوضاء نشط قوي، صوت غني بتقنية Harman، وعلبة شحن أنيقة مقاومة للماء.',null,{year:'2023'}),
+  P('xiaomi-watch','watch','Xiaomi Smart Band 8',199,249,4.6,'480','تتبع دقيق للياقة والنوم، شاشة AMOLED نابضة بالحياة، وبطارية تدوم حتى 16 يومًا.',{color:['أسود','أزرق']},{year:'2023'}),
 ];
 
 // PRODUCTS is what every screen renders from: the built-in demo catalog
